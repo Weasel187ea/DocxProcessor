@@ -44,15 +44,16 @@ def getText(filename):
 
 
 
-onlyfiles = os.listdir()
-FileData = []
+if __name__ == "__main__":
+    onlyfiles = os.listdir()
+    FileData = []
 
-for file in onlyfiles:
-    if file != "extractText.py":
-        FileData.append(getText(file))
+    for file in onlyfiles:
+        if file.endswith("docx"):
+            FileData.append(getText(file))
 
-for data in FileData:
-    for index in data:
-        print(index)
-        print()
-    break
+    for data in FileData:
+        for index in data:
+            print(index)
+            print()
+        break
