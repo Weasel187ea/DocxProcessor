@@ -47,13 +47,14 @@ def getText(filename):
 
         for run in para.runs:
             if run.bold:
-                if "Section" in run.text:
+                # if "Section" in run.text:
+                if re.findall(r"Section:", run.text):
                     Data["section"] = para.text.replace(u'\xa0', u' ').replace("\n"," ").replace("Section:", "")
-                elif "Length" in run.text:
+                elif re.findall(r"Length:", run.text):
                     Data["length"] = para.text.replace(u'\xa0', u' ').replace("\n"," ").replace("Length:", "")
-                elif "Byline" in run.text:
+                elif re.findall(r"Byline:", run.text):
                     Data["byline"] = para.text.replace(u'\xa0', u' ').replace("\n"," ").replace("Byline:", "")
-                elif "Body" in para.text:
+                elif re.findall(r"Body", run.text):
                     body = True
 
                 headerDataDone = True # Once we reach bold words we can assume header info has been processed
