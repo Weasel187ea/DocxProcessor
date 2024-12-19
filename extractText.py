@@ -1,3 +1,4 @@
+import csv
 import re
 import docx
 import os
@@ -21,31 +22,39 @@ def getText(filename):
     fullText = [] #all text will be joined at the end
     mainHeader = "" #header
     body = False #we have reached the body paragraph, collect everything
+    headerData = []
+    headerDataDone = False
     Data = {} # --> [header, length, section, text]
 
 
     for para in doc.paragraphs:
+        # print(headerData)
+        # print()
         if mainHeader == "": #this section extracts header
             for header in iter_headings(doc.paragraphs):
-                mainHeader = header.text
+                Data["title"] = header.text
 
         for run in para.runs:
             if run.bold:
                 if "Section" in run.text:
-                    Data["section"] = para.text.replace(u'\xa0', u' ').replace("\n"," ")
+                    Data["section"] = para.text.replace(u'\xa0', u' ').replace("\n"," ").replace("Section:", "")
                 elif "Length" in run.text:
-                    Data["length"] = para.text.replace(u'\xa0', u' ').replace("\n"," ")
+                    # text = 
+                    Data["length"] = para.text.replace(u'\xa0', u' ').replace("\n"," ").replace("Length:", "")
+
                 elif "Body" in para.text:
                     body = True
+                headerDataDone = True # Once we reach bold words we can assume header info has been processed
+                if len(headerData) >= 2:
+                    Data["publisher"] = headerData[1]
+                
 
+        if (not headerDataDone) and (para.text != ""):
+            headerData.append(para.text)
 
         if para.text == "":
             continue
 
-        # elif para.text.startswith("Copyright") or para.text.startswith("Load-Date"):
-        #     continue
-        elif para.text.startswith("CopyRight"):
-            continue
         elif ("Load-Date:" in para.text) or ("End of Document" in  para.text):
             continue
 
@@ -55,29 +64,37 @@ def getText(filename):
                     lineToAdd = para.text.replace("\n", " ")
                     # fullText.append(re.sub('\s+', ' ', lineToAdd)) # look this over
                     fullText.append(lineToAdd)
-        # else:
-        #     Data.append(para.text.replace(u'\xa0', u' ').replace("\n"," ")) #gets rid of \xa0
 
         
-    Data["body"] = (" ".join(fullText))
+    Data["body"] = (" ".join(fullText)) 
+    #########################################
+    with open("finalData.csv", "a", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writerows([Data])
+    #########################################
     return Data
 
 
 
 if __name__ == "__main__":
 
+    with open("finalData.csv", "w") as csvfile:
+        fieldnames = ["title", "section", "publisher", "length", "body"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        
+
 
     onlyfiles = os.listdir()
-    FileData = []
 
     for file in onlyfiles:
         if file.endswith("docx"):
-            FileData.append(getText(file))
+            getText(file)
     # for data in FileData[0]:
     #     print(data)
     #     print()
 
-    print(FileData[0])
+    # print(FileData[0])
     # for char in FileData[0][7]:
     #     print(char, end="")
     #     if char == ".":
