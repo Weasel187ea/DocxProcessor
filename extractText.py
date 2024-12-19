@@ -28,8 +28,7 @@ def getText(filename):
 
 
     for para in doc.paragraphs:
-        # print(headerData)
-        # print()
+
         if mainHeader == "": #this section extracts header
             for header in iter_headings(doc.paragraphs):
                 Data["title"] = header.text
@@ -39,35 +38,41 @@ def getText(filename):
                 if "Section" in run.text:
                     Data["section"] = para.text.replace(u'\xa0', u' ').replace("\n"," ").replace("Section:", "")
                 elif "Length" in run.text:
-                    # text = 
                     Data["length"] = para.text.replace(u'\xa0', u' ').replace("\n"," ").replace("Length:", "")
-
+                elif "Byline" in run.text:
+                    Data["byline"] = para.text.replace(u'\xa0', u' ').replace("\n"," ").replace("Byline:", "")
                 elif "Body" in para.text:
                     body = True
+
                 headerDataDone = True # Once we reach bold words we can assume header info has been processed
-                if len(headerData) >= 2:
+                if len(headerData) >= 1:
                     Data["publisher"] = headerData[1]
+                if len(headerData) >=2:
+                    Data["date"] = headerData[2]
                 
 
-        if (not headerDataDone) and (para.text != ""):
+        if (not headerDataDone) and (para.text != ""): #data in header is not part of body paragraph, stored differently
             headerData.append(para.text)
 
-        if para.text == "":
+
+        if not para.text: #if line is empty, ignore
             continue
 
-        elif ("Load-Date:" in para.text) or ("End of Document" in  para.text):
+        elif ("Load-Date:" in para.text) or ("End of Document" in  para.text): #if includes either, we do not add to body text
             continue
-
+        elif ("Body" in para.text) or ("PDF" in para.text):
+            continue
 
         elif body == True: #we are in the body paragraph
-                if (para.text != mainHeader) and (para.text != ""):
-                    lineToAdd = para.text.replace("\n", " ")
-                    # fullText.append(re.sub('\s+', ' ', lineToAdd)) # look this over
-                    fullText.append(lineToAdd)
+                if (para.text != mainHeader) and (para.text != ""): #check that text is not header text nore empty
+                    lineToAdd = para.text.replace("\n", " ") #remove newlines
+                    fullText.append(lineToAdd) #add to fullTest list, will be joined later
+
+
 
         
     Data["body"] = (" ".join(fullText)) 
-    #########################################
+    #########################################  section that writes to csv file
     with open("finalData.csv", "a", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writerows([Data])
@@ -79,7 +84,7 @@ def getText(filename):
 if __name__ == "__main__":
 
     with open("finalData.csv", "w") as csvfile:
-        fieldnames = ["title", "section", "publisher", "length", "body"]
+        fieldnames = ["title", "byline", "date", "section", "publisher", "length", "body"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         
@@ -90,21 +95,3 @@ if __name__ == "__main__":
     for file in onlyfiles:
         if file.endswith("docx"):
             getText(file)
-    # for data in FileData[0]:
-    #     print(data)
-    #     print()
-
-    # print(FileData[0])
-    # for char in FileData[0][7]:
-    #     print(char, end="")
-    #     if char == ".":
-    #         print()
-
-
-    # for data in FileData:
-    #     # print(data)
-    #     for index in data:
-    #         print(index)
-    #         print()
-    #     break
-        
