@@ -59,6 +59,11 @@ def getText(filename):
 
                 headerDataDone = True # Once we reach bold words we can assume header info has been processed
                 if len(headerData) >= 1:
+                    # print(f"this is the header data: {headerData[1]}")
+                    if ":" in headerData[1]:
+                        headerData[1] = " ".join(headerData[1].split(":")[1:])
+                        # headerData[1] = headerData[1].split(":")[1:].join()
+
                     Data["publisher"] = headerData[1]
                 if len(headerData) >=2:
                     Data["date"] = headerData[2]
@@ -95,6 +100,7 @@ if __name__ == "__main__":
 
     onlyfiles = os.listdir() #extracts all files from directory that are docx formatted
 
-    for file in onlyfiles:
-        if file.endswith("docx"):
-            getText(file)
+    for file in os.listdir("Documents"):
+        f = os.path.join("Documents", file) #path to file
+        if f.endswith("docx"):
+            getText(f)
