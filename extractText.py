@@ -35,7 +35,7 @@ def getText(filename):
     body = False #we have reached the body paragraph, collect everything
     headerData = []
     headerDataDone = False
-    importWords = [] #small feature, includes words that are bolded in the body of text
+    importWords = set() #small feature, includes words that are bolded in the body of text
     Data = {} # --> [header, length, section, text]
 
 
@@ -56,13 +56,18 @@ def getText(filename):
                     Data["byline"] = para.text.replace(u'\xa0', u' ').replace("\n"," ").replace("Byline:", "")
                 elif re.findall(r"Body", run.text):
                     body = True
+                elif run.font.underline:
+                    importWords.add(run.text)
+
+                elif (":" not in run.text) and (run.text not in ["Load-Date:", "End of Document"]) and (run.text[-1].isalpha()):
+                        # importWords.append(run.text) # keep track of important words
+                    importWords.add(run.text)
+                    
 
                 headerDataDone = True # Once we reach bold words we can assume header info has been processed
                 if len(headerData) >= 1:
-                    # print(f"this is the header data: {headerData[1]}")
                     if ":" in headerData[1]:
                         headerData[1] = " ".join(headerData[1].split(":")[1:])
-                        # headerData[1] = headerData[1].split(":")[1:].join()
 
                     Data["publisher"] = headerData[1]
                 if len(headerData) >=2:
@@ -82,6 +87,7 @@ def getText(filename):
 
         
     Data["body"] = (" ".join(fullText)) 
+    Data["bold"] = ", ".join(importWords)
     #########################################  section that writes to csv file
     write_into_file(Data)
     #########################################
@@ -92,7 +98,7 @@ def getText(filename):
 if __name__ == "__main__":
 
     with open("finalData.csv", "w") as csvfile:
-        fieldnames = ["title", "byline", "date", "section", "publisher", "length", "body"]
+        fieldnames = ["title", "byline", "date", "section", "publisher", "length", "body", "bold"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader() #initializes header
         
